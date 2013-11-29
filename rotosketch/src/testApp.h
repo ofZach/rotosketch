@@ -3,8 +3,9 @@
 #include "ofMain.h"
 #include "ofxiOS.h"
 #include "ofxiOSExtras.h"
-
 #include "ofxSimpleSlider.h"
+#include "ofxUI.h"
+
 
 
 
@@ -29,14 +30,23 @@ public:
         
     }
     
+    
+    
     void drawPolyineThick( ofPolyline & line, int thickness){
         
-        ofSetColor(0,0,0);
-        ofMesh meshy;
+        if (line.getVertices().size() < 3) return;
+        
+        //ofSetColor(0,0,0);
+        ofVboMesh meshy;
         meshy.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
         
-        float widthSmooth = 10;
-        float angleSmooth;
+        //float widthSmooth = 10;
+        //float angleSmooth = 0;
+        
+        float startAngle;
+        float endAngle;
+        ofPoint startPos;
+        ofPoint endPos;
         
         for (int i = 0;  i < line.getVertices().size(); i++){
             int me_m_one = i-1;
@@ -51,9 +61,38 @@ public:
             offset.y = sin(angle + PI/2) * thickness;
             meshy.addVertex(  line.getVertices()[i] +  offset );
             meshy.addVertex(  line.getVertices()[i] -  offset );
+            
+            if (i == 0) startAngle = angle;
+            if (i == line.getVertices().size()-1) endAngle = angle;
+            if (i == 0) startPos = line.getVertices()[i];
+            if (i == line.getVertices().size()-1) endPos = line.getVertices()[i];
+            
+        }
+        meshy.draw();
+        
+        startAngle -= PI/2.0;
+        
+        meshy.clear();
+        meshy.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
+        meshy.addVertex(startPos);
+        for (int i = 0; i < 20; i++){
+            float angle = ofMap(i,0,19, startAngle, startAngle-PI);
+            meshy.addVertex(startPos + thickness * ofPoint(cos(angle), sin(angle)));
         }
         
         meshy.draw();
+        
+        endAngle -= PI/2.0;
+        meshy.clear();
+        meshy.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
+        meshy.addVertex(endPos);
+        for (int i = 0; i < 20; i++){
+            float angle = ofMap(i,0,19, endAngle, endAngle+PI);
+            meshy.addVertex(endPos + thickness * ofPoint(cos(angle), sin(angle)));
+        }
+        
+        meshy.draw();
+        
         
         
     }
@@ -78,6 +117,9 @@ public:
         // this is simpler logic!
         
         float startTime = time - distanceFromTime;
+        
+        
+        ofPolyline line;
         
         if (timePts.size() > 1){
             
@@ -106,9 +148,25 @@ public:
                     }
                 }
                 
+                //cout << "i: " << i << " " << endl;
                 if (bPtBGood == true && bPtBGood == true){
-                    ofLine(timePts[i].pt, timePts[i+1].pt);
+                    line.addVertex(timePts[i].pt);
+                    //cout << "------>  good: " << line.size() << endl;
+                    //ofLine(timePts[i].pt, timePts[i+1].pt);
+                    if (i == timePts.size()-2){
+                        line.addVertex(timePts[i+1].pt);
+                        drawPolyineThick(line, width);
+                    }
+                } else {
+                    
+                    ///cout << "------> non good: " << line.size() << endl;
+                    //if (line.size() > 1) cout << line.size() << endl;
+                    if (line.size() > 1) drawPolyineThick(line, width);
+                    line.getVertices().clear();
                 }
+                
+                
+                
             }
             
             
@@ -148,10 +206,40 @@ class testApp : public ofxiOSApp{
         void deviceOrientationChanged(int newOrientation);
     
     
-    
+        ofPoint drawingTimePos[10];
+        bool bDrawingTimeStoke[10];
         timeStroke stroke[10];
         vector < timeStroke > strokes;
-        ofxSimpleSlider slider;
+       // ofxSimpleSlider slider;
+
+        ofxiPhoneVideoPlayer player;
+        ofxiPhoneVideoPlayer playerSmall;
+    
+        ofFbo fbo;
+    
+        ofxUICanvas *gui;
+        void guiEvent(ofxUIEventArgs &e);
+    
+    
+    //-----
+    
+    ofxUISlider * sliderPosition;
+    float position;
+    float thickness;
+    float transparency;
+    bool bDrawMag;
+    float movieSpeed;
+    
+    float howMuchT;
+    
+    
+    ofColor backgroundColor;
+    float radius;
+    int resolution;
+   // ofPoint position;
+    bool drawFill;
+	float red, green, blue, alpha;
+    
 
 
 };

@@ -34,7 +34,7 @@ class ofxSimpleSlider {
 		void	updatePercentFromMouse(int mx, int my); 
 		
 	
-	protected: 
+	//protected:
 		float	x;
 		float	y; 
 		float	width; 
